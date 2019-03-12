@@ -1,5 +1,5 @@
-#cc =gcc
-cc=mipsel-openwrt-linux-gcc
+cc =gcc
+#cc=mipsel-openwrt-linux-gcc
 target = client 
 #查找所有的.c 文件
 source = $(shell find ./ -name "*.c")

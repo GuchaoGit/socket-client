@@ -92,7 +92,8 @@ int main(int argc, char *argv[])
 	bzero(&servaddr, sizeof(servaddr));
 	servaddr.sin_family = AF_INET;
 	//47.93.55.33
-	inet_pton(AF_INET, "20.40.3.14", &servaddr.sin_addr);
+	//20.40.3.14
+	inet_pton(AF_INET, "192.168.30.193", &servaddr.sin_addr);
 	servaddr.sin_port = htons(SERV_PORT);
 /***********************/
 	struct ifreq ifrset;
