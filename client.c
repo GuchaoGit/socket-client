@@ -7,8 +7,32 @@
 #include <sys/ioctl.h>
 #include <arpa/inet.h>
 #include <net/if.h>
+#include <linux/types.h>
+#include <asm/byteorder.h>
+#include<sys/types.h>
+#include<sys/time.h>
+#include<netinet/tcp.h>
+
+#include <linux/ip.h>
+#include <errno.h>
+
 #define MAXLINE 80
 #define SERV_PORT 11066
+
+int SocketConnected(int sock)
+{
+	if (sock <= 0)
+		return 0;
+	struct tcp_info info;
+	int len = sizeof(info);
+	getsockopt(sock, IPPROTO_TCP, TCP_INFO, &info,
+		   (socklen_t *) & len);
+	if ((info.tcpi_state == TCP_ESTABLISHED)) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
 
 int main(int argc, char *argv[])
 {
@@ -42,7 +66,7 @@ int main(int argc, char *argv[])
 	     sizeof(struct timeval)) < 0) {
 		perror("setsockopt error set send time \n");
 	}
-	tv_timeout.tv_sec = 10;
+	tv_timeout.tv_sec = 20;
 	tv_timeout.tv_usec = 0;
 	if (setsockopt
 	    (sockfd, SOL_SOCKET, SO_RCVTIMEO, (void *) &tv_timeout,
@@ -74,10 +98,10 @@ int main(int argc, char *argv[])
 
 		struct ifreq ifr;
 		char *ifname = argv[1];
-//		memset(&ifr, 0x00, sizeof(ifr));
+//              memset(&ifr, 0x00, sizeof(ifr));
 		strcpy(ifr.ifr_name, ifname);
 
-//		setsockopt(sockfd,SOL_SOCKET,SO_REUSEADDR,(char *)&ifr,sizeof(ifr));
+//              setsockopt(sockfd,SOL_SOCKET,SO_REUSEADDR,(char *)&ifr,sizeof(ifr));
 		int err = setsockopt(sockfd, SOL_SOCKET, SO_BINDTODEVICE,
 				     (char *) &ifr,
 				     sizeof(ifr));
@@ -85,7 +109,7 @@ int main(int argc, char *argv[])
 		if (err == 0) {
 			printf("setsockopt success\n");
 		} else {
-			printf("setsockopt failure %d\n",err);
+			printf("setsockopt failure %d\n", err);
 		}
 	}
 
@@ -93,7 +117,7 @@ int main(int argc, char *argv[])
 	servaddr.sin_family = AF_INET;
 	//47.93.55.33
 	//20.40.3.14
-	inet_pton(AF_INET, "192.168.30.193", &servaddr.sin_addr);
+	inet_pton(AF_INET, "47.99.34.130", &servaddr.sin_addr);
 	servaddr.sin_port = htons(SERV_PORT);
 /***********************/
 	struct ifreq ifrset;
@@ -116,12 +140,24 @@ int main(int argc, char *argv[])
 		printf("socket connect failure\n");
 	}
 
-//      n = read(sockfd, buf, MAXLINE);
-//      printf("Response from server:\n");
+      n = read(sockfd, buf, MAXLINE);
+      printf("Response from server:%d\n",n);
+      if (errno == EINTR)
+      {
+      		printf("errno == EINTR");
+      }else{
+       	printf("errno == %d\n",errno);
+      }
 //      write(STDOUT_FILENO, buf, n);
 	printf("will be closed after 3s\n");
+	int cnt=SocketConnected(sockfd);
+	printf("socket is connected:%s\n",cnt==1?"yes":"no");
 	sleep(3);
 	close(sockfd);
+
+	int cnt2=SocketConnected(sockfd);
+	printf("socket is connected after close:%s\n",cnt2==1?"yes":"no");
+
 
       FAILED:
 	close(sockfd);
